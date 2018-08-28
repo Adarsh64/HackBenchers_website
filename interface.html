@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="en">
+  <script src="arena_games_mod.js"></script>
+  <script src="sort.js"></script>
+  <script src="auto_complete.js"></script>
+</head>
+<body>
+	<h1>Games Arena</h1>
+	<button class="main_page">Main Page</button>
+	<div class='main_container'></div>
+
+<!--Autocomplete feature -->
+<div  class="autocomplete_form">
+  <div class="autocomplete" style="width:300px;">
+    <input id="myInput" type="text" name="myCountry" placeholder="Name">
+  </div>
+  <input type="submit" value="Search" id = 'inp'>
+</div>
+
+<!--Filter Feature-->
+<div class="dropdown">
+  <button class="dropbtn"><img src="filter.png"></button>
+  <div class="dropdown-content" >
+    <button>Platformer</button>
+    <button>Puzzle</button>
+    <button>Sports</button>
+    <button>Strategy</button>
+    <button>Fighting</button>
+    <button>RPG</button>
+    <button>Action</button>
+    <button>Adventure</button>
+    <button>Shooter</button>
+    <button>Music</button>
+    <button>Board</button>
+    <button>Racing</button>
+    <button>Simulation</button>
+    <button>Flight</button>
+    <button>Compilation</button>
+    <button>Educational</button>
+    <button>Wrestling</button>
+    <button>Productivity</button>
+    <button>Party</button>
+    <button>Battle</button>
+    <button>Word Game</button>
+    <button>Card</button>
+    <button>Pinball</button>
+    <button>Hunting</button>
+    <button>Casino</button>
+    <button>Trivia</button>
+    <button>Virtual Pet</button>
+    <button>Editor</button>
+    <button>Other</button>
+  </div>
+</div>
+
+<!--Sort Feature-->
+<div class="sort">
+	<button class="sort_btn">Sort</button>
+	<div class="arrow">
+		<button onclick="up(this)" id='up'><img src="up.png" width="10px" height="10px"></button>
+		<button onclick="down(this)" id='down'><img src="down.png" width="10px" height="10px"></button>
+	</div>
+</div>
+
+<!--Previous and Next Button-->
+<button align="center" id = "prev" onclick="prev_or_next(this)">Previous</button>
+<button align="center" id = "next" onclick="prev_or_next(this)">Next</button>
+
+<script type="text/javascript">
+
+	//list is a variable containing the data given in http://starlord.hackerearth.com/gamesext
+
+	var num_of_boxes = 9; //Number of boxes in the main page
+	var start_id = 0;
+	current_focus = 1; //tells which page is in focus
+	start_page = 1;//First page in the page
+	limit=20;	//pagination
+	active = ["None"]; //filter
+	
+	container = document.querySelector('.main_container');
+
+	//Creating the box template
+	var box_temp = document.createElement('div');
+	box_temp.setAttribute('class','box_temp');
+	var img = document.createElement('img');
+	img.setAttribute('src','final_img_game.png');
+	img.setAttribute('class','final_logo');
+	var title = document.createElement('h3');
+	title.setAttribute('id','title');
+	var platform = document.createElement('h3');
+	platform.setAttribute('id','platform');
+	platform.innerHTML = "Platform : ";
+	var score = document.createElement('h3');
+	score.innerHTML = "Score : ";
+	score.setAttribute('id','score');
+	var genre = document.createElement('h3');
+	genre.setAttribute('id','genre');
+	genre.innerHTML = "Genre : ";
+	var release_year = document.createElement('h3');
+	release_year.setAttribute('id','release_year');
+	release_year.innerHTML = "Release Year : ";
+	box_temp.appendChild(img);
+	box_temp.appendChild(title);
+	box_temp.appendChild(platform);
+	box_temp.appendChild(genre);
+	box_temp.appendChild(release_year);
+	box_temp.appendChild(score);
+
+	//creating a button template
+
+	var pages = document.createElement('div');
+	pages.setAttribute('class','button_container');
+	document.body.appendChild(pages);
+	var button = document.createElement('div');
+	button.setAttribute('class','new_button');
+	var but_content = document.createElement('button');
+	button.appendChild(but_content);
+
+	//adding eventListener to all the filter elements
+	onclick_add();
+	function onclick_add()
+	{
+
+		main_children = document.querySelector('.dropdown-content').children;
+		for(var i=0;i<main_children.length;i++)
+		{
+			main_children[i].addEventListener('click',function(){
+				change(this);
+			});
+		}
+	}
+	//Fired when filter is activated
+	function change(a)
+	{	pages.children[0].firstChild.click();
+		filter_value = a.innerHTML;
+		idx = active.indexOf(filter_value);
+		if(idx==-1)
+		{	
+			if(active.length==1 && active[0]=="None")
+				active.pop();
+
+			//activate the filter
+			active.push(filter_value);
+			a.style.backgroundColor = 'lightblue';
+		}
+		else
+		{	//remove activated filter
+			active.splice(idx,1);
+			if(active.length==0)
+			{
+				active.push("None");
+			}
+			a.style.backgroundColor = '';
+		}
+		create_content();
+	}
+
+	// 'num_of_boxes' games will be listed starting from start_id
+	function create_content() 
+	{
+		container = document.querySelector('.main_container');
+		if(container.childElementCount>0)
+		{	count=0;
+			while(container.firstChild)
+			{	
+				container.removeChild(container.firstChild);
+			}
+		}
+		golden_pass = 0;//If there is no filter then reducing the computations
+		if(active.length==1 && active[0]=="None")
+			golden_pass=1;
+
+		//creating num_of_boxes of boxes
+		if(num_of_boxes+start_id>cur_list.length)
+		{
+			diff_new = cur_list.length - start_id;
+			num_of_boxes = diff_new;
+			if(num_of_boxes<=0)
+			{
+				alert("No search results");
+				num_of_boxes = 9;
+				return 0;
+			}
+		}
+		var box = 0;
+		counter = 0;
+		while(box<num_of_boxes)
+		{
+			var dupNode = box_temp.cloneNode(true);
+			current_box = cur_list[start_id+counter];
+			counter+=1;
+			if(!golden_pass)
+			{
+				genre = current_box["genre"];
+				if(active.indexOf(genre)==-1)
+					continue;
+			}
+			dupNode.querySelector('#title').innerHTML = current_box['title'];
+			if(current_box['editors_choice']=="Y")
+			{
+				star = document.createElement('img');
+				star.setAttribute('src','star-icon.jpg');
+				star.setAttribute('class','star');
+				dupNode.appendChild(star);
+			}
+			dupNode.querySelector('#platform').innerHTML += current_box['platform'];
+			dupNode.querySelector('#score').innerHTML += current_box['score'];
+			dupNode.querySelector('#genre').innerHTML += current_box['genre'];
+			dupNode.querySelector('#release_year').innerHTML += current_box['release_year'];
+			container.appendChild(dupNode);
+			box++;
+	}
+		num_of_boxes = 9;
+		return 1;
+	}
+	normal();
+	create_content();
+	cur_active_idx = 0;
+
+	//Change the index in pagination row.
+	function change_idx() 
+	{	
+		idx = this.firstChild.innerHTML;
+		current_focus_cp = current_focus;
+		start_id_cp = start_id;
+		current_focus = idx;
+		idx-=1;
+		start_id = idx*num_of_boxes;
+		ret = create_content(); 
+		if(ret)
+		{
+			diff = current_focus-start_page;
+			if(diff>10)
+			{
+				//move left
+				move_left(diff);
+			}
+			else if(diff<10)
+			{
+				//move right
+				move_right(diff);
+			}
+			diff = current_focus-start_page;
+			pages.children[cur_active_idx].firstChild.style.backgroundColor = '';
+			pages.children[diff].firstChild.style.backgroundColor = 'lightblue';
+			cur_active_idx = diff;
+		}
+		else
+		{
+			start_id = start_id_cp;
+			current_focus = current_focus;
+			create_content();
+		}
+	}
+
+	//Enhancing pagination view
+	function move_left(diff)
+	{
+		diff -=10;//number of left shifts to be done
+		childrens = pages.children;
+		start_page = parseInt(childrens[0].firstChild.innerHTML)+diff;
+		if(start_page+limit>num_of_pages)
+		{
+			limit = num_of_pages- start_page;
+		}
+		for(i=0;i<limit;i++)
+		{	
+			childrens[i].firstChild.innerHTML = parseInt(childrens[i].firstChild.innerHTML) + diff;
+		}
+	}
+	//Enhancing pagination view
+	function move_right(diff)
+	{
+		sub = diff-10;
+		childrens = pages.children;
+		start_page = parseInt(childrens[0].firstChild.innerHTML)+sub;
+		if(start_page<1)
+		{
+			sub =sub + start_page*-1+1;
+			start_page =1;
+		}
+		if(sub!=0)
+		{	
+			for(i=0;i<limit;i++)
+			{
+				childrens[i].firstChild.innerHTML = parseInt(childrens[i].firstChild.innerHTML) + sub;
+			}
+		}	
+		
+	}
+	//If previous or next button is pressed
+	function prev_or_next(a)
+	{
+		diff=-1;
+		if(a.innerText == "Next")
+		{
+			diff = 1;
+			start_page+=1;
+		}
+		if(start_page!=1 || diff==1)
+		{
+			if(diff==-1)
+				start_page-=1;
+			childrens = pages.children;
+			for(i=0;i<limit;i++)
+			{
+				childrens[i].firstChild.innerHTML = parseInt(childrens[i].firstChild.innerHTML) +diff;
+			}
+		}
+	}
+
+	//from the current focus always 10 pages should be there to the left.
+	//from the current focus always 9 pages should be there to the right.
+	//Paginaiton
+	var num_of_pages = Math.ceil(cur_list.length/num_of_boxes);
+	
+	//default first 20
+	for(i=0;i<20;i++)
+	{
+		var new_button = button.cloneNode(true);
+		new_button.firstChild.innerHTML = i+1; //getElementsByTagName returns collection
+		new_button.addEventListener("click",change_idx);
+		pages.appendChild(new_button);
+	}
+	pages.firstChild.firstChild.style.backgroundColor = 'lightblue';
+	function normal() 
+	{	//Default state
+		cur_list = list;
+		cur_list_str = "normal"
+		create_content();
+	}
+	//Sort in Ascending order
+	function up(a)
+	{	pages.children[0].firstChild.click();
+		if(cur_list_str=="normal" || cur_list_str=="down")
+		{
+			if(cur_list_str=="down")
+				{
+					document.querySelector('#down').style.backgroundColor='';
+				}
+			cur_list = idx_list;
+			create_content();
+			cur_list_str="up";
+			a.style.backgroundColor = 'lightblue';
+		}
+		else if(cur_list_str=="up")
+		{
+			normal();
+			a.style.backgroundColor = '';
+		}
+
+	}
+	//Sort in Descending order
+	function down(a) 
+	{	pages.children[0].firstChild.click();
+		if(cur_list_str=="normal" || cur_list_str=="up")
+			{
+				if(cur_list_str=="up")
+				{
+					document.querySelector('#up').style.backgroundColor='';
+				}
+				cur_list = sorted;
+				create_content();
+				cur_list_str="down";
+				a.style.backgroundColor = 'lightblue';
+			}
+		else if(cur_list_str=="down")
+			{
+				normal();	
+				a.style.backgroundColor = '';
+			}
+	}
+/*initiate the autocomplete function on the "myInput" element, and pass along the cur_list array as possible autocomplete values:*/
+autocomplete(document.getElementById("myInput"), cur_list);
+
+main_page = document.querySelector('.main_page');
+main_page.addEventListener('click',function(){
+	normal();
+	main_page.style.visibility = "hidden";
+	document.getElementById("myInput").value = "";
+})
+//Displays search results
+function new_disp() {
+	main_page.style.visibility = "visible";
+	pages.children[0].firstChild.click();
+	if(store_idx.length==0)
+	{
+		alert("No search results");
+		normal();
+	}
+	else
+	{
+		search_list = [];
+		pattern = document.getElementById("myInput").value;
+		for(var i=0;i<store_idx.length;i++)
+		{
+			if (list[store_idx[i]]['title'].toString().substr(0, pattern.length).toUpperCase() == pattern.toUpperCase())
+				search_list.push(list[store_idx[i]]);
+		}
+		console.log(search_list);
+		cur_list = search_list;
+		create_content();
+	}
+}
+srh = document.querySelector('#inp');
+srh.addEventListener('click',new_disp);
+</script>
+</body>
+</html>
